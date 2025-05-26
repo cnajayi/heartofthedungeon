@@ -30,7 +30,7 @@ local idleAnim = Anim8.newAnimation(idleGrid('1-4', 1), 0.2)
 
 local walkSprite = love.graphics.newImage("graphics/character/Walk.png")
 local walkGrid = Anim8.newGrid(128, 128, walkSprite:getWidth(), walkSprite:getHeight())
-local walkAnim = Anim8.newAnimation(walkGrid('1-8', 1), 0.15)
+local walkAnim = Anim8.newAnimation(walkGrid('1-6', 1), 0.15)
 
 local runSprite = love.graphics.newImage("graphics/character/Run.png")
 local runGrid = Anim8.newGrid(128, 128, runSprite:getWidth(), runSprite:getHeight())
