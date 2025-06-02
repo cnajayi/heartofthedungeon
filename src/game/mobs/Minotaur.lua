@@ -49,17 +49,17 @@ function Minotaur:init(type) Enemy.init(self)
     self.damage = 15
 
     self:setAnimation("idle", idleSprite, idleAnim)
-self:setAnimation("walk", walkSprite, walkAnim)
-self:setAnimation("hurt", hurtSprite, hurtAnim)
-self:setAnimation("attack", attackSprite, attackAnim)
-self:setAnimation("dead", deadSprite, deadAnim)
+    self:setAnimation("walk", walkSprite, walkAnim)
+    self:setAnimation("hurt", hurtSprite, hurtAnim)
+    self:setAnimation("attack", attackSprite, attackAnim)
+    self:setAnimation("dead", deadSprite, deadAnim)
 
-self:setHurtbox("idle", 32, 32, 64, 64)
-self:setHurtbox("walk", 32, 32, 64, 64)
-self:setHurtbox("hurt", 28, 28, 72, 72)
-self:setHurtbox("attack", 28, 28, 72, 72) 
+    self:setHurtbox("idle", 32, 32, 64, 64)
+    self:setHurtbox("walk", 32, 32, 64, 64)
+    self:setHurtbox("hurt", 28, 28, 72, 72)
+    self:setHurtbox("attack", 28, 28, 72, 72) 
 
-self:setHitbox("attack", 70, 30, 40, 60)
+    self:setHitbox("attack", 70, 30, 40, 60)
 
     Timer.every(5,function() self:changeState() end)
 end
@@ -93,22 +93,36 @@ function Minotaur:update(dt, stage)
     self.animations[self.state]:update(dt)
 end -- end function
 
-function Minotaur:hit(damage, direction)
-    if self.invincible then return end
-
-    self.invincible = true
-    self.hp = self.hp - damage
-    self.state = "hurt"
-    Sounds["mob_hurt"]:play()
-
-    if self.hp <= 0 then
-        self.died = true
-        self.state = "dead"
+    function Minotaur:hit(damage, direction)
+        if self.invincible then return end
+    
+        self.invincible = true
+        self.hp = self.hp - damage
+        self.state = "hurt"
+        Sounds["mob_hurt"]:play()
+    
+        local knockback = 10
+        local push
+        if direction == "l" then
+            push = knockback
+        else
+            push = -knockback
+        end
+        local ogX = self.x
+    
+        Timer.tween(0.1, self, {x = self.x + push}, 'out-quad', function()
+            Timer.tween(0.1, self, {x = ogX}, 'in-quad')
+        end)
+    
+        if self.hp <= 0 then
+            self.died = true
+            self.state = "dead"
+        end
+    
+        Timer.after(1, function() self:endHit(direction) end)
+        Timer.after(0.9, function() self.invincible = false end)
     end
-
-    Timer.after(1, function() self:endHit(direction) end)
-    Timer.after(0.9, function() self.invincible = false end)
-end
+    
 
 function Minotaur:endHit(direction)
     if self.dir == direction then
