@@ -105,35 +105,35 @@ function Player:getHurtbox()
 end
 
 function Player:update(dt, stage)
-    local dx, dy = 0, 0
+    local moved = false
 
-    -- Move right
     if love.keyboard.isDown("d", "right") then
-        self.dir = "r" 
-        dx = self.speed * dt
-    -- Move left
+        self.dir = "r"
+        if not self:checkWallCollision(self.x + self.speed * dt, self.y, stage) then
+            self.x = self.x + self.speed * dt
+            moved = true
+        end
     elseif love.keyboard.isDown("a", "left") then
-        self.dir = "l"  
-        dx = -self.speed * dt
+        self.dir = "l"
+        if not self:checkWallCollision(self.x - self.speed * dt, self.y, stage) then
+            self.x = self.x - self.speed * dt
+            moved = true
+        end
     end
 
-    -- Move up
     if love.keyboard.isDown("w", "up") then
-        dy = -self.speed * dt
-    -- Move down
+        if not self:checkWallCollision(self.x, self.y - self.speed * dt, stage) then
+            self.y = self.y - self.speed * dt
+            moved = true
+        end
     elseif love.keyboard.isDown("s", "down") then
-        dy = self.speed * dt
+        if not self:checkWallCollision(self.x, self.y + self.speed * dt, stage) then
+            self.y = self.y + self.speed * dt
+            moved = true
+        end
     end
 
-    if not self:checkWallCollision(self.x + dx, self.y, stage) then
-        self.x = self.x + dx
-    end
-    if not self:checkWallCollision(self.x, self.y + dy, stage) then
-        self.y = self.y + dy
-    end
-    
-    -- Update state based on movement
-    if dx ~= 0 or dy ~= 0 then
+    if moved then
         if self.state ~= "attack" and self.state ~= "runAttack" and self.state ~= "hurt" and self.state ~= "dead" then
             self.state = "run"
         end
@@ -142,12 +142,9 @@ function Player:update(dt, stage)
             self.state = "idle"
         end
     end
-    
 
-    -- Update animations
     (self.animations[self.state] or self.animations["idle"]):update(dt)
 end
-
 
 function Player:draw()
     local flip = (self.dir == "l")
