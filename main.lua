@@ -4,12 +4,18 @@ local Sounds = require "src.game.Sounds"
 local Player = require "src.game.Player"
 local Stage = require "src.game.Stage"
 local createS1 = require "src.game.createS1" 
+local tween = require "libs.tween"
 
 function love.load()
     love.window.setTitle("Heart of the Dungeon")
     Push:setupScreen(gameWidth, gameHeight, windowWidth, windowHeight, {fullscreen = false, resizable = true})
     math.randomseed(os.time())
 
+    name = {x = 0, y = 0, text = "Created by: Crystal Ajayi"}
+    local targetY = gameHeight - 30
+    tweenAnim = tween.new(4, name, { y = targetY }, 'outBounce')
+
+    
     --fade vars
     fadeAlpha = 0
     fadeTimer = 0
@@ -19,6 +25,14 @@ function love.load()
     gameState = "start"
 
     stage = createS1()
+    for i = 1, #stage.mobs do
+        local mob = stage.mobs[i]
+        if mob.name == "minotaur" then
+            minotaur = mob
+            break
+        end
+    end    
+
     stage:playMusic()
     player = Player(stage.initialPlayerX, stage.initialPlayerY)
 
@@ -38,7 +52,7 @@ function love.keypressed(key)
         if gameState == "start" then
             gameState = "play"
         elseif gameState == "over" then
-            love.event.quit()
+            restartGame()
         end
     end
 
@@ -48,7 +62,7 @@ function love.keypressed(key)
 end
 
 function love.update(dt)
-    if player.hp <= 0 and not isFadingToGameOver then
+    if (player.hp <= 0 or (minotaur and minotaur.died)) and not isFadingToGameOver then
         isFadingToGameOver = true
         fadeTimer = 0
         stage:stopMusic()
@@ -57,7 +71,7 @@ function love.update(dt)
     
 
     if gameState == "start" then
-        -- Start screen logic
+        --start screen logic
     elseif gameState == "play" then
         player:update(dt, stage)
         stage:update(dt, player)
@@ -80,6 +94,11 @@ function love.update(dt)
     elseif gameState == "over" then
         -- Game over logic
     end
+
+    if tweenAnim then
+        tweenAnim:update(dt)
+    end
+
 end
 
 function love.draw()
@@ -115,6 +134,13 @@ function drawStartScreen()
     love.graphics.setFont(smallFont)
     love.graphics.setColor(1, 1, 1)
     love.graphics.printf("Press Enter to Start", 0, 130, gameWidth, "center")
+
+    love.graphics.setFont(smallFont)
+    local textWidth = smallFont:getWidth(name.text)
+    local middle = (gameWidth - textWidth) / 2
+
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.print(name.text, middle, name.y)
 end
 
 function drawGameOverScreen()
@@ -128,6 +154,24 @@ function drawGameOverScreen()
 
     love.graphics.setFont(smallFont)
     love.graphics.setColor(1, 1, 1)
-    love.graphics.printf("Press Enter to Restart", 0, 250, gameWidth, "center")
+    love.graphics.printf("Press Enter to Restart", 0, 130, gameWidth, "center")
 end
 
+function restartGame()
+    stage = createS1()
+    stage:playMusic()
+    player = Player(stage.initialPlayerX, stage.initialPlayerY)
+
+    for i = 1, #stage.mobs do
+        local mob = stage.mobs[i]
+        if mob.name == "minotaur" then
+            minotaur = mob
+            break
+        end
+    end    
+
+    fadeAlpha = 0
+    fadeTimer = 0
+    isFadingToGameOver = false
+    gameState = "play"
+end
